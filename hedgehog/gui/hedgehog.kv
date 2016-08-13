@@ -1,0 +1,228 @@
+#:import Toolbar kivymd.toolbar.Toolbar
+#:import NavigationDrawer kivymd.navigationdrawer.NavigationDrawer
+#:import MDCheckbox kivymd.selectioncontrols.MDCheckbox
+#:import MDSwitch kivymd.selectioncontrols.MDSwitch
+#:import MDLabel kivymd.label.MDLabel
+#:import MDList kivymd.list.MDList
+#:import MDSlider kivymd.slider.MDSlider
+#:import md_icons kivymd.icon_definitions.md_icons
+
+<MotorControl>:
+    value: int(slide.value)
+    size_hint_y: None
+
+    on_value: app.action(self.update)
+
+    canvas:
+        Color:
+            rgba: self.theme_cls.divider_color
+        Line:
+            points: root.x, root.y, root.x + self.width, root.y
+    BoxLayout:
+        orientation: 'vertical'
+        BoxLayout:
+            orientation: 'horizontal'
+            MDLabel
+            MDLabel:
+                text: "Motor " + str(root.port) + ": " + str(root.value)
+                font_style: 'Body2'
+                theme_text_color: 'Primary'
+        MDSlider:
+            id: slide
+            show_off: False
+            min: -0x7FFF
+            max: +0x7FFF
+            step: 1
+        RelativeLayout:
+            MDFlatButton:
+                pos_hint: {'left': 0}
+                text: "-"
+                on_press: slide.value = slide.min
+            MDFlatButton:
+                pos_hint: {'center_x': 0.5}
+                text: "off"
+                on_press: slide.value = int((slide.max + slide.min) / 2)
+            MDFlatButton:
+                pos_hint: {'right': 1}
+                text: "+"
+                on_press: slide.value = slide.max
+
+<ServoControl>:
+    value: int(slide.value)
+    active: onoff.active
+    size_hint_y: None
+
+    on_value: app.action(self.update)
+    on_active: app.action(self.update)
+
+    canvas:
+        Color:
+            rgba: self.theme_cls.divider_color
+        Line:
+            points: root.x, root.y, root.x + self.width, root.y
+    BoxLayout:
+        orientation: 'vertical'
+        BoxLayout:
+            orientation: 'horizontal'
+            AnchorLayout:
+                MDSwitch:
+                    id: onoff
+                    size_hint: None, None
+                    size: dp(36), dp(48)
+            MDLabel:
+                text: "Servo " + str(root.port) + ": " + str(root.value)
+                font_style: 'Body2'
+                theme_text_color: 'Primary'
+        MDSlider:
+            id: slide
+            show_off: False
+            min: 0x0000
+            max: 0x7FFF
+            step: 1
+        RelativeLayout:
+            MDFlatButton:
+                pos_hint: {'left': 0}
+                text: "min"
+                on_press: slide.value = int(slide.min)
+            MDFlatButton:
+                pos_hint: {'center_x': 0.5}
+                text: "center"
+                on_press: slide.value = int((slide.max + slide.min) / 2)
+            MDFlatButton:
+                pos_hint: {'right': 1}
+                text: "max"
+                on_press: slide.value = int(slide.max)
+
+<PhoneToolbar@Toolbar>:
+    title: 'Hedgehog'
+    left_action_items: [['menu', lambda x: app.nav_drawer.toggle()]]
+
+<TabletToolbar@Toolbar>:
+    title: 'Hedgehog'
+    left_action_items: [['menu', lambda x: None]]
+
+[HedgehogNavDrawer@NavigationDrawer]:
+    title: "Hedgehog"
+    NavigationDrawerIconButton:
+        icon: 'circle'
+        text: "Controllers"
+        on_release: app.root.scr_mgr.current = 'controllers'
+    NavigationDrawerIconButton:
+        icon: 'circle'
+        text: "Motors"
+        on_release: app.root.scr_mgr.current = 'motors'
+    NavigationDrawerIconButton:
+        icon: 'circle'
+        text: "Servos"
+        on_release: app.root.scr_mgr.current = 'servos'
+
+<ControllerIcon>:
+    size_hint: None, None
+    size: dp(48), dp(48)
+    padding: dp(12), dp(12)
+
+    font_style: 'Icon'
+    text: u"{}".format(md_icons['wifi' if root.connected else 'wifi-off'])
+    theme_text_color: 'Primary' if root.connected else 'Hint'
+    halign: 'center'
+    valign: 'middle'
+
+<ControllerItem>:
+    text: root.name
+    secondary_text: root.endpoint
+    on_press: app.connect(self)
+
+    ControllerIcon:
+        connected: root.client is not None
+
+<Controllers@ScrollView>:
+    do_scroll_x: False
+    ControllerList:
+        endpoints: app.endpoints
+        on_endpoints: self.update_endpoints()
+
+<Motors@ScrollView>:
+    do_scroll_x: False
+    MDList:
+        MotorControl:
+            port: 0
+        MotorControl:
+            port: 1
+        MotorControl:
+            port: 2
+        MotorControl:
+            port: 3
+
+<Servos@ScrollView>:
+    do_scroll_x: False
+    MDList:
+        ServoControl:
+            port: 0
+        ServoControl:
+            port: 1
+        ServoControl:
+            port: 2
+        ServoControl:
+            port: 3
+
+<PhoneLayout@BoxLayout>:
+    scr_mgr: scr_mgr
+    orientation: 'vertical'
+
+    PhoneToolbar
+    ScreenManager:
+        id: scr_mgr
+        Screen:
+            name: 'controllers'
+            Controllers
+        Screen:
+            name: 'motors'
+            Motors
+        Screen:
+            name: 'servos'
+            Servos
+
+<TabletLayout@BoxLayout>:
+    scr_mgr: scr_mgr
+    orientation: 'vertical'
+
+    TabletToolbar
+    ScreenManager:
+        id: scr_mgr
+        Screen:
+            name: 'screen'
+            BoxLayout:
+                orientation: 'horizontal'
+                spacing: dp(8)
+                BoxLayout:
+                    orientation: 'vertical'
+                    MDLabel:
+                        size_hint_y: None
+                        height: self.texture_size[1] + dp(20)
+
+                        text: "Controllers"
+                        font_style: 'Title'
+                        theme_text_color: 'Primary'
+                    Controllers
+                BoxLayout:
+                    orientation: 'vertical'
+                    MDLabel:
+                        size_hint_y: None
+                        height: self.texture_size[1] + dp(20)
+
+                        text: "Motors"
+                        font_style: 'Title'
+                        theme_text_color: 'Primary'
+                    Motors
+                BoxLayout:
+                    orientation: 'vertical'
+                    MDLabel:
+                        size_hint_y: None
+                        height: self.texture_size[1] + dp(20)
+
+                        text: "Servos"
+                        font_style: 'Title'
+                        theme_text_color: 'Primary'
+                    Servos
+
+TabletLayout
