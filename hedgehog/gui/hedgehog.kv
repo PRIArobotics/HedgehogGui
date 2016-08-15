@@ -93,6 +93,32 @@
                 text: "max"
                 on_press: slide.value = int(slide.max)
 
+<IOControl>:
+    on_type: app.action(self.update)
+    on_pull: app.action(self.update)
+    on_level: app.action(self.update)
+    size_hint_y: None
+
+    canvas:
+        Color:
+            rgba: self.theme_cls.divider_color
+        Line:
+            points: root.x, root.y, root.x + self.width, root.y
+    BoxLayout:
+        orientation: 'vertical'
+        BoxLayout:
+            orientation: 'horizontal'
+            MDLabel:
+                text: "I/O " + str(root.port) + ": " + str(root.value)
+                font_style: 'Body2'
+                theme_text_color: 'Primary'
+        MDSlider:
+            min: 0x0000
+            max: 0xFFFF
+            step: 1
+            value: root.value
+
+
 <PhoneToolbar@Toolbar>:
     title: 'Hedgehog'
     left_action_items: [['menu', lambda x: app.nav_drawer.toggle()]]
@@ -115,6 +141,10 @@
         icon: 'circle'
         text: "Servos"
         on_release: app.root.scr_mgr.current = 'servos'
+    NavigationDrawerIconButton:
+        icon: 'circle'
+        text: "I/Os"
+        on_release: app.root.scr_mgr.current = 'ios'
 
 <ControllerIcon>:
     size_hint: None, None
@@ -165,6 +195,14 @@
         ServoControl:
             port: 3
 
+<IOs@ScrollView>:
+    do_scroll_x: False
+    MDList:
+        IOControl:
+            port: 14
+        IOControl:
+            port: 15
+
 <PhoneLayout@BoxLayout>:
     scr_mgr: scr_mgr
     orientation: 'vertical'
@@ -181,6 +219,9 @@
         Screen:
             name: 'servos'
             Servos
+        Screen:
+            name: 'ios'
+            IOs
 
 <TabletLayout@BoxLayout>:
     scr_mgr: scr_mgr
@@ -224,5 +265,15 @@
                         font_style: 'Title'
                         theme_text_color: 'Primary'
                     Servos
+                BoxLayout:
+                    orientation: 'vertical'
+                    MDLabel:
+                        size_hint_y: None
+                        height: self.texture_size[1] + dp(20)
+
+                        text: "I/Os"
+                        font_style: 'Title'
+                        theme_text_color: 'Primary'
+                    IOs
 
 TabletLayout

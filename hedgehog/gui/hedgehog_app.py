@@ -5,7 +5,7 @@ from hedgehog.client import HedgehogClient
 from pyre.zactor import ZActor
 from kivy.app import App
 from kivy.lang import Builder
-from kivy.properties import BooleanProperty, ListProperty, NumericProperty, ObjectProperty, StringProperty
+from kivy.properties import BooleanProperty, ListProperty, NumericProperty, ObjectProperty, OptionProperty, StringProperty
 from kivy.uix.boxlayout import BoxLayout
 from kivymd.label import MDLabel
 from kivymd.list import MDList, ILeftBody, TwoLineIconListItem
@@ -13,6 +13,7 @@ from kivymd.theming import ThemableBehavior
 
 from hedgehog.utils.discovery.node import Node
 from hedgehog.utils import zmq as zmq_utils
+from hedgehog.protocol.messages import io
 
 
 class MotorControl(ThemableBehavior, BoxLayout):
@@ -30,6 +31,37 @@ class ServoControl(ThemableBehavior, BoxLayout):
 
     def update(self, client):
         client.set_servo(self.port, self.active, self.value)
+
+
+class IOControl(ThemableBehavior, BoxLayout):
+    port = NumericProperty()
+    value = NumericProperty()
+
+    type = OptionProperty('digital', options=('digital', 'analog', 'output'))
+    pull = OptionProperty('pullup', options=('pullup', 'pulldown', 'floating'))
+    level = OptionProperty('off', options=('on', 'off'))
+
+    configs = {
+        'digital': 0,
+        'analog': io.ANALOG,
+        'output': io.OUTPUT,
+        'pullup': io.PULLUP,
+        'pulldown': io.PULLDOWN,
+        'floating': 0,
+        'on': io.LEVEL,
+        'off': 0,
+    }
+
+    def update(self, client):
+        flags = self.configs[self.type]
+        flags |= self.configs[self.level] if self.type == 'output' else self.configs[self.pull]
+        client._send(io.StateAction(self.port, flags))
+
+    def get_update(self, client):
+        if self.type == 'digital':
+            self.value = 1 if client.get_digital(self.port) else 0
+        elif self.type == 'analog':
+            self.value = client.get_analog(self.port)
 
 
 class ControllerIcon(ILeftBody, MDLabel):
