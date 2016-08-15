@@ -41,6 +41,11 @@ class ControllerItem(TwoLineIconListItem):
     endpoint = StringProperty("")
     client = ObjectProperty(None, allownone=True)
 
+    def disconnect(self):
+        if self.client is not None:
+            self.client.close()
+            self.client = None
+
 
 class ControllerList(MDList):
     endpoints = ListProperty()
@@ -52,6 +57,7 @@ class ControllerList(MDList):
     def update_endpoints(self):
         for endpoint, widget in list(self._endpoints.items()):
             if endpoint not in self.endpoints:
+                widget.disconnect()
                 del self._endpoints[endpoint]
                 self.remove_widget(widget)
         for index, endpoint in enumerate(self.endpoints):
@@ -87,21 +93,24 @@ class HedgehogApp(App):
         self.setup_actor()
 
     def on_stop(self):
-        if self.controller is not None:
-            self.controller.client.close()
+        self.disconnect()
         self.teardown_actor()
 
     def on_resume(self):
         self.setup_actor()
 
     def on_pause(self):
-        if self.controller is not None:
-            self.controller.client.close()
+        self.disconnect()
         self.teardown_actor()
 
     @property
     def client(self):
-        return self.controller.client if self.controller is not None else None
+        if self.controller is None:
+            return None
+        if self.controller.client is None:
+            self.controller = None
+            return None
+        return self.controller.client
 
     def setup_actor(self):
         def actor(ctx, pipe):
@@ -153,13 +162,15 @@ class HedgehogApp(App):
         if controller == self.controller:
             return
 
-        if self.controller is not None:
-            self.controller.client.close()
-            self.controller.client = None
-            self.controller = None
+        self.disconnect()
 
         self.controller = controller
         controller.client = HedgehogClient(controller.endpoint, self.ctx)
+
+    def disconnect(self):
+        if self.controller is not None:
+            self.controller.disconnect()
+            self.controller = None
 
     def action(self, action):
         if self.client is not None:
