@@ -10,6 +10,7 @@
 <MotorControl>:
     value: int(slide.value)
     size_hint_y: None
+    height: dp(100)
 
     on_value: app.action(self.update)
 
@@ -30,8 +31,8 @@
         MDSlider:
             id: slide
             show_off: False
-            min: -0x7FFF
-            max: +0x7FFF
+            min: -1000
+            max: +1000
             step: 1
         RelativeLayout:
             MDFlatButton:
@@ -51,6 +52,7 @@
     value: int(slide.value)
     active: onoff.active
     size_hint_y: None
+    height: dp(100)
 
     on_value: app.action(self.update)
     on_active: app.action(self.update)
@@ -76,8 +78,8 @@
         MDSlider:
             id: slide
             show_off: False
-            min: 0x0000
-            max: 0x7FFF
+            min: 0
+            max: 2000
             step: 1
         RelativeLayout:
             MDFlatButton:
