@@ -2,7 +2,6 @@ import time
 import zmq
 from hedgehog.client import HedgehogClient
 
-from pyre.zactor import ZActor
 from kivy.app import App
 from kivy.lang import Builder
 from kivy.properties import BooleanProperty, ListProperty, NumericProperty, ObjectProperty, OptionProperty, StringProperty
@@ -11,8 +10,9 @@ from kivymd.label import MDLabel
 from kivymd.list import MDList, ILeftBody, TwoLineIconListItem
 from kivymd.theming import ThemableBehavior
 
-from hedgehog.utils.discovery.node import Node
-from hedgehog.utils import zmq as zmq_utils
+from hedgehog.utils.discovery.service_node import ServiceNode
+from hedgehog.utils.zmq.actor import Actor, CommandRegistry
+from hedgehog.utils.zmq.poller import Poller
 from hedgehog.protocol.messages import io
 
 
@@ -43,7 +43,7 @@ class IOControl(ThemableBehavior, BoxLayout):
 
     configs = {
         'digital': 0,
-        'analog': io.ANALOG,
+        'analog': 0,
         'output': io.OUTPUT,
         'pullup': io.PULLUP,
         'pulldown': io.PULLDOWN,
@@ -99,6 +99,61 @@ class ControllerList(MDList):
                 self.add_widget(widget, index)
 
 
+class DiscoveryActor(object):
+    def __init__(self, ctx, cmd_pipe, evt_pipe, app):
+        self.ctx = ctx
+        self.cmd_pipe = cmd_pipe
+        self.evt_pipe = evt_pipe
+        self.app = app
+
+        self.node = ServiceNode(self.ctx, "Hedgehog Client")
+        self.poller = Poller()
+        self.register_cmd_pipe()
+
+        self.run()
+
+    def register_cmd_pipe(self):
+        registry = CommandRegistry()
+        self.poller.register(self.cmd_pipe, zmq.POLLIN, lambda: registry.handle(self.cmd_pipe.recv_multipart()))
+
+        @registry.command(b'$TERM')
+        def handle_term():
+            self.terminate()
+
+    def terminate(self):
+        for socket in list(self.poller.sockets):
+            self.poller.unregister(socket)
+
+    def run(self):
+        # Signal actor successfully initialized
+        self.evt_pipe.signal()
+
+        with self.node:
+            self.node.join(self.app.service)
+            time.sleep(0.1)
+            self.node.request_service(self.app.service)
+
+            def recv_evt_pipe():
+                self.node.evt_pipe.recv_multipart()
+                peers = self.node.get_peers()
+                self.app.endpoints = sorted({(peer.name, endpoint)
+                                         for peer in peers if self.app.service in peer.services
+                                         for endpoint in peer.services[self.app.service]},
+                                        key=lambda endpoint: endpoint[1])
+
+            self.poller.register(self.node.evt_pipe, zmq.POLLIN, recv_evt_pipe)
+
+            then = time.time()
+            while len(self.poller.sockets) > 0:
+                timeout = 3000 - int((time.time() - then) * 1000)
+                if timeout <= 0:
+                    self.node.request_service(self.app.service)
+                    then = time.time()
+                else:
+                    for _, _, handler in self.poller.poll(timeout):
+                        handler()
+
+
 class HedgehogApp(App):
     service = 'hedgehog_server'
 
@@ -145,45 +200,7 @@ class HedgehogApp(App):
         return self.controller.client
 
     def setup_actor(self):
-        def actor(ctx, pipe):
-            pipe.signal()
-
-            with Node("Hedgehog Client", ctx) as node:
-                node.join(self.service)
-                time.sleep(0.1)
-                node.request_service(self.service)
-
-                def recv_api():
-                    command, *args = pipe.recv_multipart()
-                    command = command.decode('UTF-8')
-
-                    if command == '$TERM':
-                        for socket in list(poller.sockets):
-                            poller.unregister(socket)
-
-                def recv_inbox():
-                    node.inbox.recv_multipart()
-                    peers = node.get_peers(self.service)
-                    self.endpoints = sorted({(peer.name, endpoint)
-                                             for peer in peers
-                                             for endpoint in peer.services[self.service]},
-                                            key=lambda endpoint: endpoint[1])
-
-                poller = zmq_utils.Poller()
-                poller.register(pipe, zmq.POLLIN, recv_api)
-                poller.register(node.inbox, zmq.POLLIN, recv_inbox)
-
-                then = time.time()
-                while len(poller.sockets) > 0:
-                    timeout = 10000 - int((time.time() - then) * 1000)
-                    if timeout <= 0:
-                        node.request_service(self.service)
-                        then = time.time()
-                    else:
-                        for _, _, recv in poller.poll(timeout):
-                            recv()
-
-        self.actor = ZActor(self.ctx, actor)
+        self.actor = Actor(self.ctx, DiscoveryActor, self)
 
     def teardown_actor(self):
         if self.actor is not None:
@@ -197,7 +214,7 @@ class HedgehogApp(App):
         self.disconnect()
 
         self.controller = controller
-        controller.client = HedgehogClient(controller.endpoint, self.ctx)
+        controller.client = HedgehogClient(self.ctx, controller.endpoint)
 
     def disconnect(self):
         if self.controller is not None:
