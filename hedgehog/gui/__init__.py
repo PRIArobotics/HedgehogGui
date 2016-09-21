@@ -1,6 +1,4 @@
 import logging.config
-import time
-import zmq
 
 from .hedgehog_app import HedgehogApp
 

@@ -123,10 +123,12 @@
 
 <PhoneToolbar@Toolbar>:
     title: 'Hedgehog'
+    background_color: self.theme_cls.primary_color
     left_action_items: [['menu', lambda x: app.nav_drawer.toggle()]]
 
 <TabletToolbar@Toolbar>:
     title: 'Hedgehog'
+    background_color: self.theme_cls.primary_color
     left_action_items: [['menu', lambda x: None]]
 
 [HedgehogNavDrawer@NavigationDrawer]:
