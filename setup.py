@@ -54,9 +54,9 @@ setup(
         'test': ['hedgehog-server'],
     },
 
-    # package_data={
-    #     'proto': ['*.proto'],
-    # },
+    package_data={
+        'hedgehog.gui': ['*.kv'],
+    },
 
     entry_points={
         'console_scripts': [
