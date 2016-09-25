@@ -163,6 +163,7 @@ class HedgehogApp(App):
         super().__init__()
         self.actor = None
         self.controller = None
+        self.nav_drawer = None
         self.ctx = zmq.Context.instance()
 
         # loading kivmd.theming opens a window.
@@ -172,9 +173,8 @@ class HedgehogApp(App):
         self.theme_cls = ThemeManager()
 
     def build(self):
-        result = super().build()
         self.nav_drawer = Builder.template('HedgehogNavDrawer')
-        return result
+        return super().build()
 
     def on_start(self):
         self.setup_actor()
