@@ -6,6 +6,7 @@
 #:import MDList kivymd.list.MDList
 #:import MDSlider kivymd.slider.MDSlider
 #:import md_icons kivymd.icon_definitions.md_icons
+#:import CythonLexer pygments.lexers.CythonLexer
 
 <MotorControl>:
     value: int(slide.value)
@@ -125,11 +126,13 @@
     title: 'Hedgehog'
     background_color: self.theme_cls.primary_color
     left_action_items: [['menu', lambda x: app.nav_drawer.toggle()]]
+    right_action_items: [['play', lambda x: app.action(lambda _: app.execute(app.root.editor.text))]]
 
 <TabletToolbar@Toolbar>:
     title: 'Hedgehog'
     background_color: self.theme_cls.primary_color
     left_action_items: [['menu', lambda x: None]]
+    right_action_items: [['play', lambda x: app.action(lambda _: app.execute(app.root.editor.text))]]
 
 [HedgehogNavDrawer@NavigationDrawer]:
     title: "Hedgehog"
@@ -207,8 +210,18 @@
         IOControl:
             port: 15
 
+<Editor@BoxLayout>:
+    text: editor.text
+    CodeInput:
+        id: editor
+        lexer: CythonLexer()
+        auto_indent: True
+        focus: True
+        background_color: (1, 1, 1, 1)
+
 <PhoneLayout@BoxLayout>:
     scr_mgr: scr_mgr
+    editor: editor
     orientation: 'vertical'
 
     PhoneToolbar
@@ -223,12 +236,26 @@
         Screen:
             name: 'servos'
             Servos
+        # Screen:
+        #     name: 'ios'
+        #     IOs
         Screen:
-            name: 'ios'
-            IOs
+            name: 'editor'
+            Editor
+                id: editor
+
+[Header@MDLabel]:
+    size_hint_y: None
+    height: self.texture_size[1] + dp(20)
+
+    text: ctx.text
+    halign: 'center'
+    font_style: 'Title'
+    theme_text_color: 'Primary'
 
 <TabletLayout@BoxLayout>:
     scr_mgr: scr_mgr
+    editor: editor
     orientation: 'vertical'
 
     TabletToolbar
@@ -241,43 +268,30 @@
                 spacing: dp(8)
                 BoxLayout:
                     orientation: 'vertical'
-                    MDLabel:
-                        size_hint_y: None
-                        height: self.texture_size[1] + dp(20)
-
+                    Header:
                         text: "Controllers"
-                        font_style: 'Title'
-                        theme_text_color: 'Primary'
                     Controllers
                 BoxLayout:
                     orientation: 'vertical'
-                    MDLabel:
-                        size_hint_y: None
-                        height: self.texture_size[1] + dp(20)
-
+                    Header:
                         text: "Motors"
-                        font_style: 'Title'
-                        theme_text_color: 'Primary'
                     Motors
                 BoxLayout:
                     orientation: 'vertical'
-                    MDLabel:
-                        size_hint_y: None
-                        height: self.texture_size[1] + dp(20)
-
+                    Header:
                         text: "Servos"
-                        font_style: 'Title'
-                        theme_text_color: 'Primary'
                     Servos
+                # BoxLayout:
+                #     orientation: 'vertical'
+                #     Header:
+                #         text: "I/Os"
+                #     IOs
                 BoxLayout:
                     orientation: 'vertical'
-                    MDLabel:
-                        size_hint_y: None
-                        height: self.texture_size[1] + dp(20)
-
-                        text: "I/Os"
-                        font_style: 'Title'
-                        theme_text_color: 'Primary'
-                    IOs
+                    Header:
+                        pos_hint: {'center_x': 0.5}
+                        text: "Editor"
+                    Editor
+                        id: editor
 
 TabletLayout

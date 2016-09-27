@@ -221,6 +221,9 @@ class HedgehogApp(App):
             self.controller.disconnect()
             self.controller = None
 
+    def execute(self, code):
+        pass
+
     def action(self, action):
         if self.client is not None:
             action(self.client)
