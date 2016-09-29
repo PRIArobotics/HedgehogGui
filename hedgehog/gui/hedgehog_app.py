@@ -140,6 +140,12 @@ class DiscoveryActor(object):
                                          for peer in peers if self.app.service in peer.services
                                          for endpoint in peer.services[self.app.service]},
                                         key=lambda endpoint: endpoint[1])
+                controller = self.app.controller
+                if controller is not None:
+                    ident = controller.name, controller.endpoint
+                    if ident not in self.app.endpoints:
+                        self.app.disconnect()
+
 
             self.poller.register(self.node.evt_pipe, zmq.POLLIN, recv_evt_pipe)
 
@@ -170,12 +176,12 @@ main()
 class HedgehogApp(App):
     service = 'hedgehog_server'
 
+    controller = ObjectProperty(None, allownone=True)
     endpoints = ListProperty()
 
     def __init__(self):
         super().__init__()
         self.actor = None
-        self.controller = None
         self.nav_drawer = None
         self.ctx = zmq.Context.instance()
 
