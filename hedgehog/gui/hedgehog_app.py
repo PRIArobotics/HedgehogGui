@@ -154,6 +154,19 @@ class DiscoveryActor(object):
                         handler()
 
 
+hello_world = \
+"""from time import sleep
+from hedgehog.client import entry_point
+
+
+@entry_point()
+def main(hedgehog):
+    print("Hello World")
+
+main()
+"""
+
+
 class HedgehogApp(App):
     service = 'hedgehog_server'
 
@@ -177,6 +190,7 @@ class HedgehogApp(App):
         return super().build()
 
     def on_start(self):
+        self.root.editor.editor.text = hello_world
         self.setup_actor()
 
     def on_stop(self):
@@ -221,8 +235,20 @@ class HedgehogApp(App):
             self.controller.disconnect()
             self.controller = None
 
-    def execute(self, code):
-        pass
+    def execute(self):
+        code = self.root.editor.code
+        self.root.editor.output = ""
+
+        def do_output(text):
+            self.root.editor.output += text
+
+        pid = self.client.execute_process(
+                "python",
+                on_stdout=lambda _, pid, fileno, chunk: do_output(chunk.decode()),
+                on_stderr=lambda _, pid, fileno, chunk: do_output(chunk.decode()),
+                on_exit=lambda _, pid, exit_code: do_output("\n  Program finished: {}\n".format(exit_code)))
+        self.client.send_process_data(pid, code.encode())
+        self.client.send_process_data(pid)
 
     def action(self, action):
         if self.client is not None:

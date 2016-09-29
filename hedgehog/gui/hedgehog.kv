@@ -126,13 +126,13 @@
     title: 'Hedgehog'
     background_color: self.theme_cls.primary_color
     left_action_items: [['menu', lambda x: app.nav_drawer.toggle()]]
-    right_action_items: [['play', lambda x: app.action(lambda _: app.execute(app.root.editor.text))]]
+    right_action_items: [['play', lambda x: app.action(lambda _: app.execute())]]
 
 <TabletToolbar@Toolbar>:
     title: 'Hedgehog'
     background_color: self.theme_cls.primary_color
     left_action_items: [['menu', lambda x: None]]
-    right_action_items: [['play', lambda x: app.action(lambda _: app.execute(app.root.editor.text))]]
+    right_action_items: [['play', lambda x: app.action(lambda _: app.execute())]]
 
 [HedgehogNavDrawer@NavigationDrawer]:
     title: "Hedgehog"
@@ -211,13 +211,21 @@
             port: 15
 
 <Editor@BoxLayout>:
-    text: editor.text
+    editor: editor
+    code: editor.text
+    output: ""
+
+    orientation: 'vertical'
     CodeInput:
         id: editor
         lexer: CythonLexer()
         auto_indent: True
         focus: True
         background_color: (1, 1, 1, 1)
+    CodeInput:
+        size_hint_y: 0.3
+        background_color: (1, 1, 1, 1)
+        text: root.output
 
 <PhoneLayout@BoxLayout>:
     scr_mgr: scr_mgr
@@ -268,21 +276,29 @@
                 spacing: dp(8)
                 BoxLayout:
                     orientation: 'vertical'
+                    size_hint_x: None
+                    width: dp(280)
                     Header:
                         text: "Controllers"
                     Controllers
                 BoxLayout:
                     orientation: 'vertical'
+                    size_hint_x: None
+                    width: dp(190)
                     Header:
                         text: "Motors"
                     Motors
                 BoxLayout:
                     orientation: 'vertical'
+                    size_hint_x: None
+                    width: dp(190)
                     Header:
                         text: "Servos"
                     Servos
                 # BoxLayout:
                 #     orientation: 'vertical'
+                #    size_hint_x: None
+                #    width: dp(300)
                 #     Header:
                 #         text: "I/Os"
                 #     IOs
