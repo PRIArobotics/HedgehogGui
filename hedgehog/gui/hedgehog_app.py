@@ -140,6 +140,12 @@ class DiscoveryActor(object):
                                          for peer in peers if self.app.service in peer.services
                                          for endpoint in peer.services[self.app.service]},
                                         key=lambda endpoint: endpoint[1])
+                controller = self.app.controller
+                if controller is not None:
+                    ident = controller.name, controller.endpoint
+                    if ident not in self.app.endpoints:
+                        self.app.disconnect()
+
 
             self.poller.register(self.node.evt_pipe, zmq.POLLIN, recv_evt_pipe)
 
@@ -154,15 +160,29 @@ class DiscoveryActor(object):
                         handler()
 
 
+hello_world = \
+"""from time import sleep
+from hedgehog.client import entry_point
+
+
+@entry_point()
+def main(hedgehog):
+    print("Hello World")
+
+main()
+"""
+
+
 class HedgehogApp(App):
     service = 'hedgehog_server'
 
+    controller = ObjectProperty(None, allownone=True)
     endpoints = ListProperty()
 
     def __init__(self):
         super().__init__()
         self.actor = None
-        self.controller = None
+        self.nav_drawer = None
         self.ctx = zmq.Context.instance()
 
         # loading kivmd.theming opens a window.
@@ -172,11 +192,11 @@ class HedgehogApp(App):
         self.theme_cls = ThemeManager()
 
     def build(self):
-        result = super().build()
         self.nav_drawer = Builder.template('HedgehogNavDrawer')
-        return result
+        return super().build()
 
     def on_start(self):
+        self.root.editor.editor.text = hello_world
         self.setup_actor()
 
     def on_stop(self):
@@ -220,6 +240,21 @@ class HedgehogApp(App):
         if self.controller is not None:
             self.controller.disconnect()
             self.controller = None
+
+    def execute(self):
+        code = self.root.editor.code
+        self.root.editor.output = ""
+
+        def do_output(text):
+            self.root.editor.output += text
+
+        pid = self.client.execute_process(
+                "python",
+                on_stdout=lambda _, pid, fileno, chunk: do_output(chunk.decode()),
+                on_stderr=lambda _, pid, fileno, chunk: do_output(chunk.decode()),
+                on_exit=lambda _, pid, exit_code: do_output("\n  Program finished: {}\n".format(exit_code)))
+        self.client.send_process_data(pid, code.encode())
+        self.client.send_process_data(pid)
 
     def action(self, action):
         if self.client is not None:

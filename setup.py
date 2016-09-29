@@ -19,7 +19,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     name='hedgehog-gui',
-    version='0.0.0',
+    version='0.1.0',
     description='GUI for visualizing and controlling Hedgehog robots',
     long_description=long_description,
     url="https://github.com/PRIArobotics/HedgehogGui",
@@ -54,9 +54,9 @@ setup(
         'test': ['hedgehog-server'],
     },
 
-    # package_data={
-    #     'proto': ['*.proto'],
-    # },
+    package_data={
+        'hedgehog.gui': ['*.kv'],
+    },
 
     entry_points={
         'console_scripts': [
