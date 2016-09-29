@@ -280,24 +280,25 @@
                 BoxLayout:
                     orientation: 'vertical'
                     size_hint_x: None
-                    width: dp(280)
-                    Header:
-                        text: "Controllers"
-                    Controllers
-                BoxLayout:
-                    orientation: 'vertical'
-                    size_hint_x: None
-                    width: dp(190)
-                    Header:
-                        text: "Motors"
-                    Motors
-                BoxLayout:
-                    orientation: 'vertical'
-                    size_hint_x: None
-                    width: dp(190)
-                    Header:
-                        text: "Servos"
-                    Servos
+                    width: dp(400)
+                    BoxLayout:
+                        orientation: 'vertical'
+                        Header:
+                            text: "Controllers"
+                        Controllers
+                    BoxLayout:
+                        orientation: 'horizontal'
+                        spacing: dp(8)
+                        BoxLayout:
+                            orientation: 'vertical'
+                            Header:
+                                text: "Motors"
+                            Motors
+                        BoxLayout:
+                            orientation: 'vertical'
+                            Header:
+                                text: "Servos"
+                            Servos
                 # BoxLayout:
                 #     orientation: 'vertical'
                 #    size_hint_x: None
