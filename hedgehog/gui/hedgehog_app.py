@@ -165,7 +165,7 @@ hello_world = \
 from hedgehog.client import entry_point
 
 
-@entry_point()
+@entry_point(emergency=15)
 def main(hedgehog):
     print("Hello World")
 
