@@ -162,14 +162,11 @@ class DiscoveryActor(object):
 
 hello_world = \
 """from time import sleep
-from hedgehog.client import entry_point
+from hedgehog.client import connect
 
 
-@entry_point(emergency=15)
-def main(hedgehog):
+with connect(emergency=15) as hedgehog:
 	print("Hello World")
-
-main()
 """
 
 
