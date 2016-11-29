@@ -181,8 +181,8 @@
         endpoints: app.endpoints
         on_endpoints: self.update_endpoints()
 
-<Motors@ScrollView>:
-    do_scroll_x: False
+<Motors@BoxLayout>:
+    orientation: 'vertical'
     MDList:
         MotorControl:
             port: 0
@@ -193,8 +193,8 @@
         MotorControl:
             port: 3
 
-<Servos@ScrollView>:
-    do_scroll_x: False
+<Servos@BoxLayout>:
+    orientation: 'vertical'
     MDList:
         ServoControl:
             port: 0
@@ -289,6 +289,9 @@
                     BoxLayout:
                         orientation: 'horizontal'
                         spacing: dp(8)
+                        size_hint_y: None
+                        # TODO having to set this to an absolute number is ugly
+                        height: dp(450)
                         BoxLayout:
                             orientation: 'vertical'
                             Header:
