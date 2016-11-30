@@ -175,6 +175,7 @@ class HedgehogApp(App):
 
     controller = ObjectProperty(None, allownone=True)
     endpoints = ListProperty()
+    pid = NumericProperty(None, allownone=True)
 
     def __init__(self):
         super().__init__()
@@ -245,13 +246,22 @@ class HedgehogApp(App):
         def do_output(text):
             self.root.editor.output += text
 
-        pid = self.client.execute_process(
+        def do_exit(exit_code):
+            do_output("\n  Program finished: {}\n".format(exit_code))
+            self.pid = None
+
+        self.pid = self.client.execute_process(
                 "python",
                 on_stdout=lambda _, pid, fileno, chunk: do_output(chunk.decode()),
                 on_stderr=lambda _, pid, fileno, chunk: do_output(chunk.decode()),
-                on_exit=lambda _, pid, exit_code: do_output("\n  Program finished: {}\n".format(exit_code)))
-        self.client.send_process_data(pid, code.encode())
-        self.client.send_process_data(pid)
+                on_exit=lambda _, pid, exit_code: do_exit(exit_code))
+        self.client.send_process_data(self.pid, code.encode())
+        self.client.send_process_data(self.pid)
+
+    def kill(self):
+        if self.pid is not None:
+            # send SIGTERM - don't use signal.SIGTERM, because the machine running the GUI might not be POSIX
+            self.client.signal_process(self.pid, signal=15)
 
     def action(self, action):
         if self.client is not None:
