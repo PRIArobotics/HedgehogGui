@@ -170,6 +170,35 @@ with connect(emergency=15) as hedgehog:
 """
 
 
+class Program(object):
+    def __init__(self, path):
+        self.path = path
+        self._code = None
+
+    def _load(self):
+        try:
+            with open(self.path) as f:
+                self._code = f.read()
+        except FileNotFoundError:
+            self._code = hello_world
+            self._save()
+
+    def _save(self):
+        with open(self.path, 'w') as f:
+            f.write(self._code)
+
+    @property
+    def code(self):
+        if self._code is None:
+            self._load()
+        return self._code
+
+    @code.setter
+    def code(self, value):
+        self._code = value
+        self._save()
+
+
 class HedgehogApp(App):
     service = 'hedgehog_server'
 
@@ -182,6 +211,7 @@ class HedgehogApp(App):
         self.actor = None
         self.nav_drawer = None
         self.ctx = zmq.Context.instance()
+        self.program = Program('work.py')
 
         # loading kivmd.theming opens a window.
         # defer until App is created
@@ -194,7 +224,7 @@ class HedgehogApp(App):
         return super().build()
 
     def on_start(self):
-        self.root.editor.editor.text = hello_world
+        self.root.editor.editor.text = self.program.code
         self.setup_actor()
 
     def on_stop(self):
