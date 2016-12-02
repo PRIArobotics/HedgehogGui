@@ -36,17 +36,19 @@
             min: -1000
             max: +1000
             step: 1
-        RelativeLayout:
+        BoxLayout:
+            orientation: 'horizontal'
+            spacing: dp(8)
             MDFlatButton:
-                pos_hint: {'left': 0}
+                size_hint: 0.33, None
                 text: "-"
                 on_press: slide.value = slide.min
             MDFlatButton:
-                pos_hint: {'center_x': 0.5}
+                size_hint: 0.33, None
                 text: "off"
                 on_press: slide.value = int((slide.max + slide.min) / 2)
             MDFlatButton:
-                pos_hint: {'right': 1}
+                size_hint: 0.33, None
                 text: "+"
                 on_press: slide.value = slide.max
 
@@ -85,17 +87,19 @@
             min: 0
             max: 2000
             step: 1
-        RelativeLayout:
+        BoxLayout:
+            orientation: 'horizontal'
+            spacing: dp(8)
             MDFlatButton:
-                pos_hint: {'left': 0}
+                size_hint: 0.33, None
                 text: "min"
                 on_press: slide.value = int(slide.min)
             MDFlatButton:
-                pos_hint: {'center_x': 0.5}
+                size_hint: 0.33, None
                 text: "center"
                 on_press: slide.value = int((slide.max + slide.min) / 2)
             MDFlatButton:
-                pos_hint: {'right': 1}
+                size_hint: 0.33, None
                 text: "max"
                 on_press: slide.value = int(slide.max)
 
