@@ -128,14 +128,14 @@
 <PhoneToolbar@Toolbar>:
     title: 'Hedgehog'
     background_color: self.theme_cls.primary_color
-    left_action_items: [['menu', lambda x: app.nav_drawer.toggle()]]
-    right_action_items: [['play', lambda x: app.action(lambda _: app.execute())]]
+    left_action_items: [('menu', lambda x: app.nav_drawer.toggle())]
+    right_action_items: [('play', lambda x: app.action(lambda _: app.execute())) if app.pid is None else ('stop', lambda x: app.action(lambda _: app.kill()))]
 
 <TabletToolbar@Toolbar>:
     title: 'Hedgehog'
     background_color: self.theme_cls.primary_color
-    left_action_items: [['menu', lambda x: None]]
-    right_action_items: [['play', lambda x: app.action(lambda _: app.execute())]]
+    left_action_items: [('menu', lambda x: None)]
+    right_action_items: [('play', lambda x: app.action(lambda _: app.execute())) if app.pid is None else ('stop', lambda x: app.action(lambda _: app.kill()))]
 
 [HedgehogNavDrawer@NavigationDrawer]:
     title: "Hedgehog"
@@ -181,8 +181,8 @@
         endpoints: app.endpoints
         on_endpoints: self.update_endpoints()
 
-<Motors@ScrollView>:
-    do_scroll_x: False
+<Motors@BoxLayout>:
+    orientation: 'vertical'
     MDList:
         MotorControl:
             port: 0
@@ -193,8 +193,8 @@
         MotorControl:
             port: 3
 
-<Servos@ScrollView>:
-    do_scroll_x: False
+<Servos@BoxLayout>:
+    orientation: 'vertical'
     MDList:
         ServoControl:
             port: 0
@@ -216,6 +216,7 @@
 <Editor@BoxLayout>:
     editor: editor
     code: editor.text
+    on_code: app.program.code = self.code
     output: ""
 
     orientation: 'vertical'
@@ -229,6 +230,7 @@
         size_hint_y: 0.3
         background_color: (1, 1, 1, 1)
         text: root.output
+        readonly: True
 
 <PhoneLayout@BoxLayout>:
     scr_mgr: scr_mgr
@@ -289,6 +291,9 @@
                     BoxLayout:
                         orientation: 'horizontal'
                         spacing: dp(8)
+                        size_hint_y: None
+                        # TODO having to set this to an absolute number is ugly
+                        height: dp(450)
                         BoxLayout:
                             orientation: 'vertical'
                             Header:

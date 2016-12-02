@@ -162,15 +162,41 @@ class DiscoveryActor(object):
 
 hello_world = \
 """from time import sleep
-from hedgehog.client import entry_point
+from hedgehog.client import connect
 
 
-@entry_point()
-def main(hedgehog):
-    print("Hello World")
-
-main()
+with connect(emergency=15) as hedgehog:
+	print("Hello World")
 """
+
+
+class Program(object):
+    def __init__(self, path):
+        self.path = path
+        self._code = None
+
+    def _load(self):
+        try:
+            with open(self.path) as f:
+                self._code = f.read()
+        except FileNotFoundError:
+            self._code = hello_world
+            self._save()
+
+    def _save(self):
+        with open(self.path, 'w') as f:
+            f.write(self._code)
+
+    @property
+    def code(self):
+        if self._code is None:
+            self._load()
+        return self._code
+
+    @code.setter
+    def code(self, value):
+        self._code = value
+        self._save()
 
 
 class HedgehogApp(App):
@@ -178,12 +204,14 @@ class HedgehogApp(App):
 
     controller = ObjectProperty(None, allownone=True)
     endpoints = ListProperty()
+    pid = NumericProperty(None, allownone=True)
 
     def __init__(self):
         super().__init__()
         self.actor = None
         self.nav_drawer = None
         self.ctx = zmq.Context.instance()
+        self.program = Program('work.py')
 
         # loading kivmd.theming opens a window.
         # defer until App is created
@@ -196,7 +224,7 @@ class HedgehogApp(App):
         return super().build()
 
     def on_start(self):
-        self.root.editor.editor.text = hello_world
+        self.root.editor.editor.text = self.program.code
         self.setup_actor()
 
     def on_stop(self):
@@ -248,13 +276,22 @@ class HedgehogApp(App):
         def do_output(text):
             self.root.editor.output += text
 
-        pid = self.client.execute_process(
+        def do_exit(exit_code):
+            do_output("\n  Program finished: {}\n".format(exit_code))
+            self.pid = None
+
+        self.pid = self.client.execute_process(
                 "python",
                 on_stdout=lambda _, pid, fileno, chunk: do_output(chunk.decode()),
                 on_stderr=lambda _, pid, fileno, chunk: do_output(chunk.decode()),
-                on_exit=lambda _, pid, exit_code: do_output("\n  Program finished: {}\n".format(exit_code)))
-        self.client.send_process_data(pid, code.encode())
-        self.client.send_process_data(pid)
+                on_exit=lambda _, pid, exit_code: do_exit(exit_code))
+        self.client.send_process_data(self.pid, code.encode())
+        self.client.send_process_data(self.pid)
+
+    def kill(self):
+        if self.pid is not None:
+            # send SIGTERM - don't use signal.SIGTERM, because the machine running the GUI might not be POSIX
+            self.client.signal_process(self.pid, signal=15)
 
     def action(self, action):
         if self.client is not None:
