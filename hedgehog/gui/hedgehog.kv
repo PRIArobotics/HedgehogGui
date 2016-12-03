@@ -39,15 +39,15 @@
         BoxLayout:
             orientation: 'horizontal'
             spacing: dp(8)
-            MDFlatButton:
+            ReallyFlatButton:
                 size_hint: 0.33, None
                 text: "-"
                 on_press: slide.value = slide.min
-            MDFlatButton:
+            ReallyFlatButton:
                 size_hint: 0.33, None
                 text: "off"
                 on_press: slide.value = int((slide.max + slide.min) / 2)
-            MDFlatButton:
+            ReallyFlatButton:
                 size_hint: 0.33, None
                 text: "+"
                 on_press: slide.value = slide.max
@@ -90,15 +90,15 @@
         BoxLayout:
             orientation: 'horizontal'
             spacing: dp(8)
-            MDFlatButton:
+            ReallyFlatButton:
                 size_hint: 0.33, None
                 text: "min"
                 on_press: slide.value = int(slide.min)
-            MDFlatButton:
+            ReallyFlatButton:
                 size_hint: 0.33, None
                 text: "center"
                 on_press: slide.value = int((slide.max + slide.min) / 2)
-            MDFlatButton:
+            ReallyFlatButton:
                 size_hint: 0.33, None
                 text: "max"
                 on_press: slide.value = int(slide.max)
