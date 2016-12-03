@@ -1,19 +1,28 @@
 import time
 import zmq
-from hedgehog.client import HedgehogClient
 
 from kivy.app import App
 from kivy.lang import Builder
 from kivy.properties import BooleanProperty, ListProperty, NumericProperty, ObjectProperty, OptionProperty, StringProperty
 from kivy.uix.boxlayout import BoxLayout
+from kivymd.button import MDFlatButton
 from kivymd.label import MDLabel
 from kivymd.list import MDList, ILeftBody, TwoLineIconListItem
 from kivymd.theming import ThemableBehavior
 
+from hedgehog.client import HedgehogClient
 from hedgehog.utils.discovery.service_node import ServiceNode
 from hedgehog.utils.zmq.actor import Actor, CommandRegistry
 from hedgehog.utils.zmq.poller import Poller
 from hedgehog.protocol.messages import io
+
+
+class ReallyFlatButton(MDFlatButton):
+    width = NumericProperty(88)
+
+    def _get_background_color_disabled(self):
+        r, g, b, _ = super(ReallyFlatButton, self)._get_background_color_disabled()
+        return r, g, b, 0.
 
 
 class MotorControl(ThemableBehavior, BoxLayout):
