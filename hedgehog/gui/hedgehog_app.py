@@ -220,7 +220,7 @@ class HedgehogApp(App):
         self.actor = None
         self.nav_drawer = None
         self.ctx = zmq.Context.instance()
-        self.program = Program('work.py')
+        self.program = Program('work/work.py')
 
         # loading kivmd.theming opens a window.
         # defer until App is created
