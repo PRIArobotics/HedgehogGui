@@ -129,17 +129,16 @@
             value: root.value
 
 
-<PhoneToolbar@Toolbar>:
+<HedgehogToolbar@Toolbar>:
     title: 'Hedgehog'
     background_color: self.theme_cls.primary_color
-    left_action_items: [('menu', lambda x: app.nav_drawer.toggle())]
     right_action_items: [('play', lambda x: app.action(lambda _: app.execute())) if app.pid is None else ('stop', lambda x: app.action(lambda _: app.kill()))]
 
-<TabletToolbar@Toolbar>:
-    title: 'Hedgehog'
-    background_color: self.theme_cls.primary_color
+<PhoneToolbar@HedgehogToolbar>:
+    left_action_items: [('menu', lambda x: app.nav_drawer.toggle())]
+
+<TabletToolbar@HedgehogToolbar>:
     left_action_items: [('menu', lambda x: None)]
-    right_action_items: [('play', lambda x: app.action(lambda _: app.execute())) if app.pid is None else ('stop', lambda x: app.action(lambda _: app.kill()))]
 
 [HedgehogNavDrawer@NavigationDrawer]:
     title: "Hedgehog"

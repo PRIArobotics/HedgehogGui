@@ -1,3 +1,4 @@
+from os import path
 import time
 import zmq
 
@@ -180,9 +181,13 @@ with connect(emergency=15) as hedgehog:
 
 
 class Program(object):
-    def __init__(self, path):
-        self.path = path
+    def __init__(self, name):
+        self.name = name
         self._code = None
+
+    @property
+    def path(self):
+        return path.join("work", self.name)
 
     def _load(self):
         try:
@@ -220,13 +225,15 @@ class HedgehogApp(App):
         self.actor = None
         self.nav_drawer = None
         self.ctx = zmq.Context.instance()
-        self.program = Program('work/work.py')
+        self.program = Program("work.py")
 
         # loading kivmd.theming opens a window.
         # defer until App is created
         from kivymd.theming import ThemeManager
 
         self.theme_cls = ThemeManager()
+
+    # lifecycle
 
     def build(self):
         self.nav_drawer = Builder.template('HedgehogNavDrawer')
@@ -247,6 +254,8 @@ class HedgehogApp(App):
         self.disconnect()
         self.teardown_actor()
 
+    # helpers
+
     @property
     def client(self):
         if self.controller is None:
@@ -264,6 +273,8 @@ class HedgehogApp(App):
             self.actor.destroy()
             self.actor = None
 
+    # client connection
+
     def connect(self, controller):
         if controller == self.controller:
             return
@@ -277,6 +288,8 @@ class HedgehogApp(App):
         if self.controller is not None:
             self.controller.disconnect()
             self.controller = None
+
+    # client commands
 
     def execute(self):
         code = self.root.editor.code
